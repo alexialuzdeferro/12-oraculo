@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oráculo das 12 Guardiãs - Pombagira</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* --- CONFIGURAÇÕES VISUAIS E CORES --- */
+        :root {
+            --cor-roxo: #4b0082;
+            --cor-lilas: #e0b0ff;
+            --cor-vermelho: #ff0000;
+            --cor-preto: #050505;
+            --bg-atual: var(--cor-preto);
+            --texto-destaque: #ffd700; /* Dourado */
+            --cor-acerto: #00ff00; /* Verde neon */
+            --cor-erro: #ff0000; /* Vermelho puro */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-atual);
+            color: white;
+            overflow-x: hidden;
+            transition: background-color 1.5s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- CHUVA DE EMOÇÕES (BACKGROUND) --- */
+        #chuva-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .elemento-chuva {
+            position: absolute;
+            font-size: 24px;
+            animation: cair linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes cair {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0.3; }
+        }
+
+        /* --- INTERFACE PRINCIPAL --- */
+        #app-container {
+            z-index: 10;
+            width: 90%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid var(--cor-lilas);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 50px;
+            margin-bottom: 80px; /* Espaço extra para o contador embaixo */
+            box-shadow: 0 0 20px var(--cor-vermelho);
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        h1, h2 {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--texto-destaque);
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        /* --- CONTADOR GLASSMORPHISM (INTEGRADO) --- */
+        #counter {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.5);
+            font-family: Arial, sans-serif; /* Fonte limpa para o contador */
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 12px;
+            z-index: 9999;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(5px); /* O efeito vidro fosco */
+            user-select: none;
+            display: flex;
+            align-items: center;
+        }
+
+        #counter:hover {
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        #count {
+            color: #fff;
+            font-weight: 500;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(74, 222, 128, 0.4);
+            margin-left: 6px;
+        }
+
+        .dot.online {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* --- QUIZ & BOTÕES --- */
+        .pergunta-nivel {
+            font-size: 0.8rem;
+            color: var(--cor-lilas);
+            margin-bottom: 10px;
+        }
+
+        .pergunta-texto {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .opcoes {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--cor-lilas);
+            color: white;
+            padding: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-transform: uppercase;
+            position: relative;
+        }
+
+        button:hover:not(:disabled) {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: var(--texto-destaque);
+            transform: scale(1.02);
+        }
+
+        button:disabled {
+            cursor: default;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        /* --- FEEDBACK DE ACERTO/ERRO --- */
+        button.btn-correto {
+            background-color: var(--cor-acerto) !important;
+            color: black !important;
+            border-color: var(--cor-acerto) !important;
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--cor-acerto);
+        }
+
+        button.btn-incorreto {
+            background-color: var(--cor-erro) !important;
+            color: white !important;
+            border-color: var(--cor-erro) !important;
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--cor-erro);
+        }
+
+        /* --- RESULTADOS E CARDS --- */
+        .card-pombagira {
+            border: 1px solid var(--texto-destaque);
+            padding: 20px;
+            margin-top: 20px;
+            background: rgba(20, 0, 20, 0.9);
+        }
+        .audio-msg {
+            font-style: italic;
+            color: var(--cor-lilas);
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 3px solid var(--cor-vermelho);
+        }
+        .btn-falar {
+            background: var(--cor-lilas);
+            color: black;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .hidden { display: none; }
+        
+        /* Barra de progresso */
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: #333;
+            margin-top: 20px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--cor-vermelho);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="chuva-container"></div>
+
+    <div id="counter" title="Total de visitas">
+        <span style="opacity: 0.7;">👤</span>
+        <span id="count">0</span>
+        <span class="dot" id="status-dot"></span>
+    </div>
+
+    <div id="app-container">
+        <div id="tela-inicio">
+            <h1>Oráculo das 12 Luas</h1>
+            <p>As cartas foram lançadas. As Guardiãs aguardam.</p>
+            <p>Responda a 12 perguntas para receber sua mensagem espiritual.</p>
+            <br>
+            <button onclick="iniciarQuiz()">Abrir o Portal</button>
+        </div>
+
+        <div id="tela-quiz" class="hidden">
+            <div class="pergunta-nivel" id="nivel-display">NÍVEL 1 - INICIADO</div>
+            <div class="pergunta-texto" id="pergunta-texto">Carregando mistérios...</div>
+            <div class="opcoes" id="opcoes-container">
+                </div>
+            <div class="progress-bar"><div class="progress-fill" id="barra-progresso"></div></div>
+        </div>
+
+        <div id="tela-resultado" class="hidden">
+            <h2>A Sessão Encerrou</h2>
+            <p>Seu desempenho espiritual: <span id="pontuacao-final"></span></p>
+            <hr style="border-color: var(--cor-roxo); opacity: 0.5;">
+            
+            <h3>Sua Guardiã Regente Hoje:</h3>
+            <div id="oraculo-destino">
+                </div>
+            
+            <button onclick="location.reload()" style="margin-top: 30px;">Consultar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- DADOS DAS 12 POMBAGIRAS --- */
+        const pombagirasDB = [
+            {
+                nome: "Maria Padilha",
+                titulo: "A Rainha",
+                dominio: "Comando/Realeza",
+                msg: "Maria Padilha é a rainha que governa com sabedoria e força. Ela ensina a liderar com justiça e a enfrentar desafios com coragem. Seu manto de realeza nos lembra que o poder verdadeiro vem da sabedoria e do respeito."
+            },
+            {
+                nome: "Maria Mulambo",
+                titulo: "A Curadora",
+                dominio: "Cura/Humildade",
+                msg: "Maria Mulambo é a mãe que acolhe e cura. Ela ensina que a humildade é o caminho para a verdadeira transformação. Com suas ervas e seu manto de simplicidade, ela renova nossas forças e purifica nossas almas."
+            },
+            {
+                nome: "Maria Quitéria",
+                titulo: "A Guerreira",
+                dominio: "Guerra/Proteção",
+                msg: "Maria Quitéria é a guerreira que defende os seus com bravura. Ela empunha a espada da justiça e nos ensina a lutar por nossos direitos. Com ela, aprendemos que a proteção vem da coragem e da fé."
+            },
+            {
+                nome: "Rosa Caveira",
+                titulo: "A Guardiã dos Ossos",
+                dominio: "Justiça/Morte",
+                msg: "Rosa Caveira é a guardiã da justiça e do equilíbrio. Ela nos lembra que a morte é apenas uma passagem, e que a justiça divina sempre prevalece. Com sua presença, aprendemos a respeitar os ciclos da vida."
+            },
+            {
+                nome: "Dama da Noite",
+                titulo: "O Mistério",
+                dominio: "Mistério/Oculto",
+                msg: "Dama da Noite é a guardiã dos segredos e da sabedoria oculta. Ela ilumina nosso caminho com a luz da lua e nos ensina a confiar em nossa intuição. Com ela, descobrimos que o mistério é a porta para o conhecimento."
+            },
+            {
+                nome: "Sete Saias",
+                titulo: "A Encantada",
+                dominio: "Alegria/Intensidade",
+                msg: "Sete Saias é a dançarina que traz a alegria e a cor para nossa vida. Com suas saias coloridas, ela nos ensina a celebrar cada momento e a viver com intensidade. Com ela, a vida se torna uma festa!"
+            },
+            {
+                nome: "Pombagira Cigana",
+                titulo: "A Nômade",
+                dominio: "Liberdade/Prosperidade",
+                msg: "Pombagira Cigana é a viajante que abre caminhos e traz prosperidade. Com seu lenço colorido e seu baralho, ela nos ensina a confiar no destino e a viver com liberdade. Com ela, a sorte está sempre ao nosso lado."
+            },
+            {
+                nome: "Maria Navalha",
+                titulo: "A Malandra",
+                dominio: "Malandragem/Rua",
+                msg: "Maria Navalha é a protetora das ruas e dos que lutam para sobreviver. Com sua navalha e sua malandragem, ela nos ensina a ser espertos e a enfrentar os desafios da vida com coragem. Com ela, nunca estamos sozinhos."
+            },
+            {
+                nome: "Pombagira da Praia",
+                titulo: "A Sereia",
+                dominio: "Emoção/Limpeza",
+                msg: "Pombagira da Praia é a guardiã das águas e das emoções. Com suas ondas, ela limpa nossa alma e nos ensina a fluir com a vida. Com ela, encontramos paz e renovação."
+            },
+            {
+                nome: "Maria Farrapo",
+                titulo: "A Transformadora",
+                dominio: "Sanidade/Caos",
+                msg: "Maria Farrapo é a transformadora da mente. Com seus farrapos, ela nos ensina que até no caos podemos encontrar a sanidade. Com ela, aprendemos a transformar nossas dores em força."
+            },
+            {
+                nome: "Pombagira Menina",
+                titulo: "A Pura",
+                dominio: "Renovação/Inocência",
+                msg: "Pombagira Menina é a guardiã da inocência e da renovação. Com seu sorriso doce, ela nos ensina que sempre podemos recomeçar. Com ela, encontramos a pureza e a esperança."
+            },
+            {
+                nome: "Pombagira da Figueira",
+                titulo: "A Ancestral",
+                dominio: "Raiz/Ancestralidade",
+                msg: "Pombagira da Figueira é a guardiã das raízes e da ancestralidade. Com seus galhos fortes, ela nos conecta aos nossos antepassados e à sabedoria da terra. Com ela, encontramos força e pertencimento."
+            }
+        ];
+
+        /* --- BANCO DE 50 PERGUNTAS DINÂMICAS --- */
+        const perguntasBase = [
+            { t: "Qual a cor predominante nas velas de Maria Padilha?", r: "Vermelho", o: ["Branco", "Azul", "Vermelho", "Amarelo"], n: 1 },
+            { t: "O que significa 'Mulambo' no nome de Maria Mulambo?", r: "Trapo/Farrapo", o: ["Rainha", "Trapo/Farrapo", "Guerreira", "Noite"], n: 1 },
+            { t: "Qual objeto simboliza a Pombagira Maria Quitéria?", r: "Espada", o: ["Espelho", "Espada", "Baralho", "Concha"], n: 1 },
+            { t: "Rosa Caveira é associada a qual ciclo?", r: "Vida e Morte", o: ["Amor e Ódio", "Vida e Morte", "Dia e Noite", "Riqueza e Pobreza"], n: 2 },
+            { t: "Qual Pombagira trabalha com o Baralho?", r: "Pombagira Cigana", o: ["Maria Padilha", "Sete Saias", "Pombagira Cigana", "Maria Navalha"], n: 1 },
+            { t: "Onde atua principalmente a Pombagira da Praia?", r: "No mar/Areia", o: ["Na mata", "No cemitério", "No mar/Areia", "Na encruzilhada de terra"], n: 1 },
+            { t: "Qual o domínio de Maria Navalha?", r: "Malandragem", o: ["Realeza", "Malandragem", "Cura", "Inocência"], n: 2 },
+            { t: "Pombagira Menina está ligada a qual energia?", r: "Renovação", o: ["Guerra", "Morte", "Renovação", "Caos"], n: 1 },
+            { t: "Qual árvore representa uma Pombagira ancestral?", r: "Figueira", o: ["Salgueiro", "Figueira", "Carvalho", "Jaqueira"], n: 2 },
+            { t: "O que Maria Padilha segura para representar a verdade?", r: "Espelho", o: ["Espada", "Espelho", "Copo", "Caveira"], n: 2 },
+            { t: "Sete Saias é conhecida por qual característica?", r: "Alegria e Dança", o: ["Silêncio", "Tristeza", "Alegria e Dança", "Guerra"], n: 1 },
+            { t: "Dama da Noite atua sob a luz de qual astro?", r: "Lua", o: ["Sol", "Marte", "Lua", "Vênus"], n: 1 },
+            { t: "Qual Pombagira lida com a sanidade e o caos mental?", r: "Maria Farrapo", o: ["Maria Mulambo", "Maria Farrapo", "Rosa Caveira", "Menina"], n: 3 },
+            { t: "Qual a oferenda clássica para Maria Quitéria?", r: "Pimenta e Vinho", o: ["Leite e Mel", "Pimenta e Vinho", "Água do mar", "Doces"], n: 2 },
+            { t: "Quem é a 'Rainha das Pombagiras'?", r: "Maria Padilha", o: ["Maria Mulambo", "Maria Padilha", "Cigana", "Figueira"], n: 1 },
+            { t: "Qual Pombagira usa saias muito coloridas?", r: "Sete Saias", o: ["Rosa Caveira", "Dama da Noite", "Sete Saias", "Maria Navalha"], n: 1 },
+            { t: "O que representa o 'Lenço' da Pombagira Cigana?", r: "Liberdade/Nômade", o: ["Prisão", "Luto", "Liberdade/Nômade", "Guerra"], n: 2 },
+            { t: "Maria Navalha usa qual objeto para defesa?", r: "Navalha", o: ["Tridente", "Navalha", "Cetro", "Livro"], n: 1 },
+            { t: "Qual Pombagira recebe oferendas de conchas?", r: "Pombagira da Praia", o: ["Maria Padilha", "Pombagira da Praia", "Quitéria", "Mulambo"], n: 2 },
+            { t: "Maria Mulambo auxilia principalmente em:", r: "Cura Emocional", o: ["Vingança", "Cura Emocional", "Guerra Física", "Jogos de Azar"], n: 2 },
+            { t: "Qual cor de vela é comum para Rosa Caveira?", r: "Preta/Vermelha", o: ["Rosa", "Azul", "Preta/Vermelha", "Amarela"], n: 2 },
+            { t: "Dama da Noite revela o quê?", r: "Segredos Ocultos", o: ["O Futuro Financeiro", "Segredos Ocultos", "Nomes de Inimigos", "Receitas"], n: 3 },
+            { t: "Pombagira Menina aceita qual tipo de oferenda?", r: "Doces e Bonecas", o: ["Cachaça", "Doces e Bonecas", "Charutos", "Pimenta"], n: 2 },
+            { t: "A Figueira conecta o médium a quê?", r: "Ancestralidade", o: ["Ao Futuro", "Ao Espaço", "Ancestralidade", "Ao Dinheiro"], n: 3 },
+            { t: "Quem é associada à heroína Joana Angélica?", r: "Maria Quitéria", o: ["Maria Padilha", "Maria Quitéria", "Dama da Noite", "Cigana"], n: 3 },
+            { t: "Qual o símbolo de poder de Maria Padilha?", r: "Cetro e Coroa", o: ["Navalha", "Cetro e Coroa", "Capa Preta", "Pandeiro"], n: 2 },
+            { t: "Ervas como Arruda e Alecrim são de qual Pombagira?", r: "Maria Mulambo", o: ["Maria Mulambo", "Rosa Caveira", "Padilha", "Navalha"], n: 3 },
+            { t: "O que simboliza a 'Caveira' para Rosa Caveira?", r: "Transformação", o: ["Medo", "Fim trágico", "Transformação", "Doença"], n: 3 },
+            { t: "Sete Saias trabalha com a quebra de:", r: "Rotinas", o: ["Ossos", "Rotinas", "Contratos", "Vidros"], n: 2 },
+            { t: "Qual elemento rege a Pombagira da Praia?", r: "Água", o: ["Fogo", "Terra", "Ar", "Água"], n: 1 },
+            { t: "Maria Farrapo ajuda a equilibrar:", r: "Mentes Perturbadas", o: ["Contas Bancárias", "Mentes Perturbadas", "Brigas de Casal", "Velas"], n: 3 },
+            { t: "Qual Pombagira tem energia 'Maternal'?", r: "Maria Mulambo", o: ["Maria Navalha", "Maria Mulambo", "Rosa Caveira", "Dama da Noite"], n: 2 },
+            { t: "Flores Noturnas são para:", r: "Dama da Noite", o: ["Cigana", "Menina", "Dama da Noite", "Praia"], n: 2 },
+            { t: "Moedas douradas são oferendas para:", r: "Pombagira Cigana", o: ["Maria Mulambo", "Rosa Caveira", "Pombagira Cigana", "Farrapo"], n: 1 },
+            { t: "Maria Navalha é associada a qual ambiente?", r: "Rua/Lapa", o: ["Palácio", "Rua/Lapa", "Floresta", "Praia"], n: 2 },
+            { t: "A cor Rosa é predominante em:", r: "Pombagira Menina", o: ["Padilha", "Quitéria", "Pombagira Menina", "Caveira"], n: 1 },
+            { t: "Raízes profundas simbolizam:", r: "Pombagira da Figueira", o: ["Sete Saias", "Pombagira da Figueira", "Mulambo", "Navalha"], n: 2 },
+            { t: "O nome 'Padilha' vem de uma corte:", r: "Francesa/Espanhola", o: ["Africana", "Francesa/Espanhola", "Brasileira", "Chinesa"], n: 3 },
+            { t: "Qual Pombagira usa chapéu panamá ou de malandro?", r: "Maria Navalha", o: ["Maria Padilha", "Maria Navalha", "Cigana", "Quitéria"], n: 2 },
+            { t: "Cristais como Ametista agradam:", r: "Dama da Noite", o: ["Maria Quitéria", "Dama da Noite", "Maria Farrapo", "Mulambo"], n: 3 },
+            { t: "Quem é a 'Guardiã da Justiça Divina'?", r: "Rosa Caveira", o: ["Rosa Caveira", "Sete Saias", "Menina", "Praia"], n: 2 },
+            { t: "A Pombagira Cigana traz a sabedoria de qual povo?", r: "Povo Cigano", o: ["Povo Nórdico", "Povo Cigano", "Povo Indígena", "Povo Egípcio"], n: 1 },
+            { t: "Quem trabalha com 'fechamento de ciclos'?", r: "Rosa Caveira", o: ["Cigana", "Rosa Caveira", "Menina", "Sete Saias"], n: 3 },
+            { t: "Qual Pombagira ajuda na 'sobrevivência'?", r: "Maria Navalha", o: ["Maria Padilha", "Maria Navalha", "Dama da Noite", "Figueira"], n: 2 },
+            { t: "Maria Farrapo transforma o Caos em:", r: "Clareza", o: ["Mais Caos", "Clareza", "Dinheiro", "Fogo"], n: 3 },
+            { t: "Qual a energia de Sete Saias?", r: "Vibrante e Sensual", o: ["Calma e Fria", "Triste e Lenta", "Vibrante e Sensual", "Maternal"], n: 2 },
+            { t: "Pombagira da Figueira usa velas:", r: "Verdes ou Marrons", o: ["Pretas", "Roxas", "Verdes ou Marrons", "Rosas"], n: 3 },
+            { t: "Qual Pombagira protege a 'Inocência'?", r: "Pombagira Menina", o: ["Maria Padilha", "Maria Quitéria", "Pombagira Menina", "Navalha"], n: 2 },
+            { t: "Onde Maria Mulambo cura as feridas?", r: "Na Alma", o: ["No Corpo Físico apenas", "Na Alma", "Nas Roupas", "No Chão"], n: 2 },
+            { t: "A chuva de vinho é associada a:", r: "Celebração das Guardiãs", o: ["Tristeza", "Celebração das Guardiãs", "Frio", "Medo"], n: 1 }
+        ];
+
+        /* --- LÓGICA DO APP --- */
+        let perguntasSelecionadas = [];
+        let indiceAtual = 0;
+        let acertos = 0;
+
+        // Animação de Chuva
+        const emojis = ['🍷', '🔱', '🌹', '💃', '🔥', '🕯️', '🚬', '🌙', '💀', '🗡️'];
+        function criarChuva() {
+            const container = document.getElementById('chuva-container');
+            setInterval(() => {
+                const el = document.createElement('div');
+                el.classList.add('elemento-chuva');
+                el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                container.appendChild(el);
+                
+                setTimeout(() => { el.remove(); }, 5000);
+            }, 300);
+        }
+
+        // Misturador de Array
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Troca de Cores do Tema
+        const cores = ['var(--cor-roxo)', 'var(--cor-lilas)', 'var(--cor-vermelho)', 'var(--cor-preto)'];
+        function mudarCorFundo() {
+            const corNova = cores[Math.floor(Math.random() * cores.length)];
+            document.body.style.backgroundColor = corNova;
+        }
+
+        // --- SISTEMA DE QUIZ ---
+        function iniciarQuiz() {
+            document.getElementById('tela-inicio').classList.add('hidden');
+            document.getElementById('tela-quiz').classList.remove('hidden');
+            
+            perguntasSelecionadas = shuffle([...perguntasBase]).slice(0, 12);
+            indiceAtual = 0;
+            acertos = 0;
+            mostrarPergunta();
+        }
+
+        function mostrarPergunta() {
+            if (indiceAtual >= 12) {
+                finalizarQuiz();
+                return;
+            }
+
+            const p = perguntasSelecionadas[indiceAtual];
+            document.getElementById('nivel-display').innerText = `PERGUNTA ${indiceAtual + 1}/12 - NÍVEL ${p.n}`;
+            document.getElementById('pergunta-texto').innerText = p.t;
+            
+            const opcoesDiv = document.getElementById('opcoes-container');
+            opcoesDiv.innerHTML = '';
+
+            const opcoesMisturadas = shuffle([...p.o]);
+
+            opcoesMisturadas.forEach(opcao => {
+                const btn = document.createElement('button');
+                btn.innerText = opcao;
+                btn.onclick = function() { verificarResposta(this, opcao, p.r); };
+                opcoesDiv.appendChild(btn);
+            });
+
+            document.getElementById('barra-progresso').style.width = ((indiceAtual) / 12 * 100) + '%';
+        }
+
+        function verificarResposta(btnElement, escolha, correta) {
+            // Desabilita todos os botões para evitar clique duplo
+            const todosBotoes = document.querySelectorAll('#opcoes-container button');
+            todosBotoes.forEach(b => b.disabled = true);
+
+            // Muda cor do fundo
+            mudarCorFundo();
+
+            // Aplica cor de acerto ou erro
+            if (escolha === correta) {
+                btnElement.classList.add('btn-correto');
+                acertos++;
+            } else {
+                btnElement.classList.add('btn-incorreto');
+            }
+
+            // Aguarda 1 segundo para o usuário ver a cor, depois avança
+            setTimeout(() => {
+                indiceAtual++;
+                mostrarPergunta();
+            }, 1000);
+        }
+
+        function finalizarQuiz() {
+            document.getElementById('tela-quiz').classList.add('hidden');
+            document.getElementById('tela-resultado').classList.remove('hidden');
+            
+            document.getElementById('pontuacao-final').innerText = `${acertos} de 12 acertos`;
+
+            const pombagiraDoDia = pombagirasDB[Math.floor(Math.random() * pombagirasDB.length)];
+            
+            const divDestino = document.getElementById('oraculo-destino');
+            divDestino.innerHTML = `
+                <div class="card-pombagira">
+                    <h3>${pombagiraDoDia.nome}</h3>
+                    <p style="color: #ccc; font-size: 0.9rem;">${pombagiraDoDia.titulo} | ${pombagiraDoDia.dominio}</p>
+                    <div class="audio-msg">"${pombagiraDoDia.msg}"</div>
+                    <button class="btn-falar" onclick="lerMensagem('${pombagiraDoDia.msg.replace(/'/g, "\\'")}')">🔊 OUVIR MENSAGEM</button>
+                </div>
+            `;
+        }
+
+        function lerMensagem(texto) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = 'pt-BR';
+                utterance.rate = 0.9;
+                utterance.pitch = 0.8;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Seu navegador não suporta áudio espiritual.");
+            }
+        }
+
+        /* --- LÓGICA DO CONTADOR (SUPABASE) --- */
+        // Configuração ÚNICA para todo o site
+        const SUPABASE_URL = 'https://qgnprifuachmfxoaalax.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbnByaWZ1YWNobWZ4b2FhbGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzODU5MDcsImV4cCI6MjA4MDk2MTkwN30.sKSYFhcI-zflr9RUKXpWF0_5sc6foDG7yxdEirtE0W4';
+        
+        // Nome ÚNICO para todo o site
+        const SITE_NAME = 'site_alexialuzdeferro';
+        
+        async function initCounter() {
+            try {
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // Verificar se já contamos nesta sessão
+                if (!sessionStorage.getItem('site_visited')) {
+                    // Incrementar contador único
+                    await incrementUniqueCounter(supabase);
+                    sessionStorage.setItem('site_visited', 'true');
+                    document.getElementById('status-dot').classList.add('online');
+                } else {
+                    // Apenas mostrar o valor atual
+                    await showCurrentCount(supabase);
+                    document.getElementById('status-dot').classList.add('online');
+                }
+                
+            } catch (error) {
+                // Modo offline silencioso
+                useOfflineCounter();
+            }
+        }
+        
+        async function incrementUniqueCounter(supabase) {
+            try {
+                const { data: existing } = await supabase
+                    .from('page_views')
+                    .select('view_count')
+                    .eq('page_name', SITE_NAME)
+                    .single();
+                
+                const current = existing?.view_count || 0;
+                const newCount = current + 1;
+                
+                await supabase
+                    .from('page_views')
+                    .upsert({
+                        page_name: SITE_NAME,
+                        view_count: newCount,
+                        last_updated: new Date().toISOString()
+                    }, {
+                        onConflict: 'page_name'
+                    });
+                
+                const countEl = document.getElementById('count');
+                countEl.textContent = newCount;
+                countEl.style.transform = 'scale(1.3)';
+                setTimeout(() => countEl.style.transform = 'scale(1)', 200);
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                throw error;
+            }
+        }
+        
+        async function showCurrentCount(supabase) {
+            try {
+                const { data } = await supabase
+                    .from('page_views')
+                    .select('view_count')
+                    .eq('page_name', SITE_NAME)
+                    .single();
+                
+                if (data) {
+                    document.getElementById('count').textContent = data.view_count;
+                }
+            } catch (error) {
+                console.error('Erro ao buscar:', error);
+            }
+        }
+        
+        function useOfflineCounter() {
+            let local = localStorage.getItem('local_site_views') || 0;
+            local = parseInt(local) + 1;
+            localStorage.setItem('local_site_views', local);
+            
+            document.getElementById('count').textContent = local;
+            document.getElementById('count').style.opacity = '0.7';
+            document.getElementById('status-dot').style.background = 'rgba(251, 191, 36, 0.5)';
+        }
+
+        // Inicialização Geral
+        window.onload = () => {
+            criarChuva();
+            initCounter(); // Inicia o contador
+        };
+    </script>
+</body>
+</html>
