@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oráculo das 12 Guardiãs</title>
+    <title>Oráculo & Portal Pombagiras</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* --- CONFIGURAÇÕES VISUAIS E CORES --- */
@@ -12,7 +12,6 @@
             --cor-lilas: #e0b0ff;
             --cor-vermelho: #ff0000;
             --cor-preto: #050505;
-            --bg-atual: var(--cor-preto);
             --texto-destaque: #ffd700; /* Dourado */
             --cor-acerto: #00ff00;
             --cor-erro: #ff0000;
@@ -22,7 +21,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Courier New', Courier, monospace;
-            background-color: var(--bg-atual);
+            background-color: var(--cor-preto);
             color: white;
             overflow-x: hidden;
             transition: background-color 1.5s ease;
@@ -43,14 +42,12 @@
             z-index: 0;
             overflow: hidden;
         }
-
         .elemento-chuva {
             position: absolute;
             font-size: 24px;
             animation: cair linear infinite;
             opacity: 0.7;
         }
-
         @keyframes cair {
             0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
             10% { opacity: 1; }
@@ -60,13 +57,13 @@
         /* --- CONTAINER PRINCIPAL (VIDRO) --- */
         #app-container {
             z-index: 10;
-            width: 95%; /* Um pouco mais largo para caber os 3 botões em mobile */
-            max-width: 750px;
+            width: 95%;
+            max-width: 800px;
             background: rgba(0, 0, 0, 0.85);
             border: 2px solid var(--cor-lilas);
             border-radius: 15px;
-            padding: 20px;
-            margin-top: 30px;
+            padding: 15px;
+            margin-top: 20px;
             margin-bottom: 80px;
             box-shadow: 0 0 20px var(--cor-vermelho);
             text-align: center;
@@ -74,59 +71,89 @@
             position: relative;
         }
 
-        /* --- NAVEGAÇÃO (ABAS E PORTAL) --- */
-        .nav-tabs {
+        /* --- NAVEGAÇÃO (8 BOTÕES) --- */
+        .nav-grid {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            flex-wrap: wrap; /* Permite quebrar linha em telas muito pequenas */
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 25px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 15px;
         }
 
+        /* Estilo Padrão dos Botões de Link */
         .nav-btn {
-            background: transparent;
+            background: rgba(75, 0, 130, 0.3);
             border: 1px solid var(--cor-lilas);
             color: var(--cor-lilas);
-            padding: 8px 16px;
-            font-size: 0.9rem;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            text-decoration: none;
             cursor: pointer;
-            border-radius: 20px;
+            border-radius: 6px;
             transition: all 0.3s;
-            text-decoration: none; /* Para o link parecer botão */
-            display: inline-block;
-        }
-
-        .nav-btn.active {
-            background: var(--cor-lilas);
-            color: black;
-            box-shadow: 0 0 10px var(--cor-lilas);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             font-weight: bold;
         }
 
         .nav-btn:hover {
-            transform: scale(1.05);
+            background: var(--cor-lilas);
+            color: black;
+            box-shadow: 0 0 10px var(--cor-lilas);
+            transform: translateY(-2px);
         }
 
-        /* Estilo do Botão Portal Pulsante */
-        .btn-portal-destaque {
-            background-color: var(--texto-destaque) !important; /* Dourado sólido */
-            color: black !important;
-            font-weight: bold;
-            border: none !important;
-            animation: pulsar-destaque 2s infinite ease-in-out;
-            display: inline-flex;
+        /* Botão Ativo (O Oráculo) */
+        .nav-btn.active {
+            background: var(--cor-lilas);
+            color: black;
+            font-weight: 900;
+        }
+
+        /* Botão PORTAL (Pulsante Dourado) */
+        .btn-portal {
+            border-color: var(--texto-destaque);
+            color: var(--texto-destaque);
+            animation: pulsar-gold 2s infinite ease-in-out;
+        }
+        @keyframes pulsar-gold {
+            0% { box-shadow: 0 0 2px var(--texto-destaque); }
+            50% { box-shadow: 0 0 15px var(--texto-destaque); background: rgba(255, 215, 0, 0.2); }
+            100% { box-shadow: 0 0 2px var(--texto-destaque); }
+        }
+
+        /* Botão PÂNICO (Redondo e Diferenciado) */
+        .btn-panico {
+            background: #8b0000; /* Vermelho escuro */
+            color: white; /* Cor do texto caso o emoji não renderize nativo */
+            border: 2px solid #ff0000;
+            border-radius: 50%; /* Redondo */
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            padding: 0;
+            font-size: 1.4rem; /* Aumentei um pouco para o fogo */
+            box-shadow: 0 0 10px #ff0000;
+            animation: pulsar-red 1.5s infinite;
+            display: flex; /* Garante centralização */
             align-items: center;
-            gap: 5px;
+            justify-content: center;
         }
-
-        @keyframes pulsar-destaque {
-            0% { box-shadow: 0 0 5px var(--texto-destaque); transform: scale(1); }
-            50% { box-shadow: 0 0 25px var(--texto-destaque), 0 0 35px var(--cor-vermelho); transform: scale(1.08); }
-            100% { box-shadow: 0 0 5px var(--texto-destaque); transform: scale(1); }
+        .btn-panico:hover {
+            background: #ff0000;
+            transform: scale(1.1);
         }
-
+        @keyframes pulsar-red {
+            0% { box-shadow: 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 20px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 rgba(255, 0, 0, 0); }
+        }
 
         h1, h2, h3 {
             text-transform: uppercase;
@@ -155,7 +182,6 @@
             display: flex;
             align-items: center;
         }
-        #counter:hover { opacity: 0.9; background: rgba(255, 255, 255, 0.08); }
         .dot { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: rgba(74, 222, 128, 0.4); margin-left: 6px; }
         .dot.online { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
@@ -180,37 +206,6 @@
         .quiz-btn.btn-correto { background-color: var(--cor-acerto) !important; color: black !important; font-weight: bold; box-shadow: 0 0 15px var(--cor-acerto); }
         .quiz-btn.btn-incorreto { background-color: var(--cor-erro) !important; color: white !important; font-weight: bold; box-shadow: 0 0 15px var(--cor-erro); }
 
-        /* --- GRID DE PERFIS (NOVA ABA) --- */
-        .perfis-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            text-align: left;
-            max-height: 65vh;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-        /* Scrollbar estilizada */
-        .perfis-grid::-webkit-scrollbar { width: 5px; }
-        .perfis-grid::-webkit-scrollbar-thumb { background: var(--cor-vermelho); border-radius: 5px; }
-        .perfis-grid::-webkit-scrollbar-track { background: #111; }
-
-        .card-perfil {
-            background: rgba(20, 0, 20, 0.6);
-            border: 1px solid #333;
-            border-left: 3px solid var(--cor-lilas);
-            padding: 15px;
-            transition: 0.3s;
-        }
-        .card-perfil:hover {
-            border-left: 3px solid var(--cor-vermelho);
-            background: rgba(40, 0, 0, 0.6);
-        }
-        .card-perfil h4 { color: var(--texto-destaque); margin: 0 0 5px 0; text-transform: uppercase; }
-        .card-perfil .meta { font-size: 0.8rem; color: #aaa; margin-bottom: 10px; font-style: italic; }
-        .card-perfil p { font-size: 0.9rem; line-height: 1.4; color: #ddd; }
-        .detalhe-item { font-size: 0.8rem; margin-top: 5px; color: var(--cor-lilas); }
-
         /* --- UTILS --- */
         .hidden { display: none !important; }
         .progress-bar { width: 100%; height: 5px; background: #333; margin-top: 20px; }
@@ -233,19 +228,31 @@
     </div>
 
     <div id="app-container">
-        <nav class="nav-tabs">
-            <button class="nav-btn active" onclick="mudarAba('oraculo')" id="btn-oraculo">O ORÁCULO</button>
-            <button class="nav-btn" onclick="mudarAba('grimorio')" id="btn-grimorio">O GRIMÓRIO (12)</button>
+        <nav class="nav-grid">
+            <button class="nav-btn active" onclick="location.reload()">ORÁCULO</button>
             
-            <a href="https://bio.site/AlmasdePombagira" target="_blank" class="nav-btn btn-portal-destaque">
-                PORTAL ⇗
+            <a href="https://alexialuzdeferro.github.io/grimorio-das-pombagiras/" target="_blank" class="nav-btn">GRIMÓRIO</a>
+            
+            <a href="https://alexialuzdeferro.github.io/PONTOS-CANTADOS/" target="_blank" class="nav-btn">PONTOS</a>
+            
+            <a href="https://alexialuzdeferro.github.io/Pombagiras/" target="_blank" class="nav-btn">BLOG</a>
+            
+            <a href="https://linktr.ee/alexiarosadefogo" target="_blank" class="nav-btn">BIO</a>
+            
+            <a href="https://pombagiras.my.canva.site/" target="_blank" class="nav-btn">CANVAS</a>
+            
+            <a href="https://bio.site/AlmasdePombagira" target="_blank" class="nav-btn btn-portal">PORTAL</a>
+
+            <a href="https://alexialuzdeferro.github.io/Business-Card/" target="_blank" class="nav-btn btn-panico" title="Business Card / Emergência">
+                🔥
             </a>
         </nav>
 
         <div id="aba-oraculo">
             <div id="tela-inicio">
                 <h1>Oráculo das 12 Luas</h1>
-                <p>Responda a 12 perguntas e descubra quem rege seu caminho hoje.</p>
+                <p>O destino aguarda. As Guardiãs estão prontas.</p>
+                <p style="font-size: 0.9rem; color: #ccc;">Clique abaixo para iniciar a consulta espiritual.</p>
                 <br>
                 <button class="quiz-btn" onclick="iniciarQuiz()">Abrir o Portal</button>
             </div>
@@ -268,118 +275,86 @@
                 <button class="quiz-btn" onclick="location.reload()" style="margin-top: 30px;">Consultar Novamente</button>
             </div>
         </div>
-
-        <div id="aba-grimorio" class="hidden">
-            <h2>As 12 Guardiãs</h2>
-            <p style="font-size: 0.8rem; margin-bottom: 20px;">Breve descrição e arquétipos das entidades.</p>
-            
-            <div class="perfis-grid" id="grid-perfis">
-                </div>
-        </div>
     </div>
 
     <script>
-        /* --- DADOS COMPLETOS (Baseado no seu primeiro prompt) --- */
+        /* --- DADOS DAS POMBAGIRAS (Para o Oráculo Falado) --- */
         const pombagirasDB = [
             {
                 nome: "Maria Padilha",
                 titulo: "A Rainha",
                 dominio: "Comando/Realeza",
-                desc: "Associada ao poder, liderança e autoridade. Seu nome refere-se à realeza e força feminina.",
-                detalhes: "Simbolismo: Coroa, cetro, espelhos. Trabalhos: Liderança, justiça e proteção.",
                 msg: "Maria Padilha é a rainha que governa com sabedoria e força. Ela ensina a liderar com justiça e a enfrentar desafios com coragem."
             },
             {
                 nome: "Maria Mulambo",
                 titulo: "A Curadora",
                 dominio: "Cura/Humildade",
-                desc: "Pombagira da cura espiritual e física. 'Mulambo' significa simplicidade; ela cura feridas da alma.",
-                detalhes: "Simbolismo: Vestes simples, ervas. Trabalhos: Cura, limpeza espiritual, renovação.",
                 msg: "Maria Mulambo é a mãe que acolhe e cura. Ela ensina que a humildade é o caminho para a verdadeira transformação."
             },
             {
                 nome: "Maria Quitéria",
                 titulo: "A Guerreira",
                 dominio: "Guerra/Proteção",
-                desc: "Guerreira destemida, associada à coragem e luta. Referência à heroína brasileira.",
-                detalhes: "Simbolismo: Espada, escudo. Trabalhos: Batalhas espirituais, coragem e defesa.",
                 msg: "Maria Quitéria é a guerreira que defende os seus com bravura. Ela empunha a espada da justiça."
             },
             {
                 nome: "Rosa Caveira",
                 titulo: "Guardiã dos Ossos",
                 dominio: "Justiça/Morte",
-                desc: "Associada à justiça divina e ao ciclo de vida e morte. Guardiã dos portais.",
-                detalhes: "Simbolismo: Caveira, rosas pretas. Trabalhos: Fechamento de ciclos, justiça, proteção contra magia.",
                 msg: "Rosa Caveira é a guardiã da justiça e do equilíbrio. Ela nos lembra que a justiça divina sempre prevalece."
             },
             {
                 nome: "Dama da Noite",
                 titulo: "O Mistério",
                 dominio: "Mistério/Oculto",
-                desc: "Pombagira da intuição e segredos. Atua nas sombras revelando verdades.",
-                detalhes: "Simbolismo: Lua, estrelas. Trabalhos: Intuição, revelação de segredos, mediunidade.",
                 msg: "Dama da Noite é a guardiã dos segredos. Ela ilumina nosso caminho com a luz da lua e intuição."
             },
             {
                 nome: "Sete Saias",
                 titulo: "A Encantada",
                 dominio: "Alegria/Intensidade",
-                desc: "Pombagira da alegria, dança e vibração intensa da vida. Traz cor e movimento.",
-                detalhes: "Simbolismo: Saias coloridas, música. Trabalhos: Prosperidade, amor, quebra de rotina.",
                 msg: "Sete Saias é a dançarina que traz a alegria. Ela nos ensina a celebrar cada momento."
             },
             {
                 nome: "Pombagira Cigana",
                 titulo: "A Nômade",
                 dominio: "Liberdade/Prosperidade",
-                desc: "Representa a liberdade, caminhos abertos e a sabedoria do povo cigano.",
-                detalhes: "Simbolismo: Baralho, moedas, lenço. Trabalhos: Viagens, prosperidade, sorte.",
                 msg: "Pombagira Cigana é a viajante que abre caminhos. Ela nos ensina a confiar no destino e viver com liberdade."
             },
             {
                 nome: "Maria Navalha",
                 titulo: "A Malandra",
                 dominio: "Malandragem/Rua",
-                desc: "Protetora das ruas, da astúcia e da sobrevivência. Mestra na defesa rápida.",
-                detalhes: "Simbolismo: Navalha, chapéu. Trabalhos: Proteção de rua, esperteza, resolução de conflitos.",
                 msg: "Maria Navalha é a protetora das ruas. Ela nos ensina a ser espertos e enfrentar desafios."
             },
             {
                 nome: "Pombagira da Praia",
                 titulo: "A Sereia",
                 dominio: "Emoção/Limpeza",
-                desc: "Conexão com o mar e as águas. Atua nas emoções profundas e limpeza.",
-                detalhes: "Simbolismo: Conchas, água do mar. Trabalhos: Emoções, limpeza, renovação.",
                 msg: "Pombagira da Praia é a guardiã das águas. Com suas ondas, ela limpa nossa alma."
             },
             {
                 nome: "Maria Farrapo",
                 titulo: "A Transformadora",
                 dominio: "Sanidade/Caos",
-                desc: "Atua na fronteira da sanidade. Transforma o caos mental em clareza.",
-                detalhes: "Simbolismo: Tecidos rasgados. Trabalhos: Saúde mental, quebra de padrões.",
                 msg: "Maria Farrapo é a transformadora da mente. Ela nos ensina que até no caos existe sanidade."
             },
             {
                 nome: "Pombagira Menina",
                 titulo: "A Pura",
                 dominio: "Renovação/Inocência",
-                desc: "Energia de renovação e recomeço. Pureza aliada à força espiritual.",
-                detalhes: "Simbolismo: Bonecas, rosas claras. Trabalhos: Novos começos, cura interior.",
                 msg: "Pombagira Menina é a guardiã da renovação. Ela nos ensina que sempre podemos recomeçar."
             },
             {
                 nome: "Pombagira da Figueira",
                 titulo: "A Ancestral",
                 dominio: "Raiz/Ancestralidade",
-                desc: "Conexão profunda com a terra e ancestrais. Sabedoria antiga.",
-                detalhes: "Simbolismo: Raízes, figueira. Trabalhos: Ancestralidade, proteção familiar.",
                 msg: "Pombagira da Figueira é a guardiã das raízes. Ela nos conecta aos nossos antepassados."
             }
         ];
 
-        /* --- PERGUNTAS (Banco reduzido para o exemplo funcionar, use o seu completo) --- */
+        /* --- PERGUNTAS DO QUIZ (Exemplo Reduzido) --- */
         const perguntasBase = [
             { t: "Qual a cor predominante nas velas de Maria Padilha?", r: "Vermelho", o: ["Branco", "Azul", "Vermelho", "Amarelo"], n: 1 },
             { t: "O que significa 'Mulambo' no nome de Maria Mulambo?", r: "Trapo/Farrapo", o: ["Rainha", "Trapo/Farrapo", "Guerreira", "Noite"], n: 1 },
@@ -396,52 +371,12 @@
             { t: "Qual Pombagira lida com a sanidade e o caos mental?", r: "Maria Farrapo", o: ["Maria Mulambo", "Maria Farrapo", "Rosa Caveira", "Menina"], n: 3 },
             { t: "Qual a oferenda clássica para Maria Quitéria?", r: "Pimenta e Vinho", o: ["Leite e Mel", "Pimenta e Vinho", "Água do mar", "Doces"], n: 2 },
             { t: "Quem é a 'Rainha das Pombagiras'?", r: "Maria Padilha", o: ["Maria Mulambo", "Maria Padilha", "Cigana", "Figueira"], n: 1 }
-            // ... (Você pode colar as outras 35 perguntas aqui do código anterior)
         ];
 
         /* --- LÓGICA DO SISTEMA --- */
         let perguntasSelecionadas = [];
         let indiceAtual = 0;
         let acertos = 0;
-
-        // Gerenciamento de Abas
-        function mudarAba(aba) {
-            const oraculoDiv = document.getElementById('aba-oraculo');
-            const grimorioDiv = document.getElementById('aba-grimorio');
-            const btnOraculo = document.getElementById('btn-oraculo');
-            const btnGrimorio = document.getElementById('btn-grimorio');
-
-            if (aba === 'oraculo') {
-                oraculoDiv.classList.remove('hidden');
-                grimorioDiv.classList.add('hidden');
-                btnOraculo.classList.add('active');
-                btnGrimorio.classList.remove('active');
-            } else {
-                oraculoDiv.classList.add('hidden');
-                grimorioDiv.classList.remove('hidden');
-                btnOraculo.classList.remove('active');
-                btnGrimorio.classList.add('active');
-                renderizarGrimorio(); // Garante que a lista está renderizada
-            }
-        }
-
-        // Renderizar Perfis
-        function renderizarGrimorio() {
-            const grid = document.getElementById('grid-perfis');
-            if (grid.innerHTML.trim() !== '') return; // Já renderizou
-
-            pombagirasDB.forEach(pg => {
-                const card = document.createElement('div');
-                card.className = 'card-perfil';
-                card.innerHTML = `
-                    <h4>${pg.nome}</h4>
-                    <div class="meta">${pg.titulo} | ${pg.dominio}</div>
-                    <p>${pg.desc}</p>
-                    <div class="detalhe-item">✦ ${pg.detalhes}</div>
-                `;
-                grid.appendChild(card);
-            });
-        }
 
         // Animação Chuva
         const emojis = ['🍷', '🔱', '🌹', '💃', '🔥', '🕯️', '🚬', '🌙', '💀', '🗡️'];
@@ -485,7 +420,7 @@
         function mostrarPergunta() {
             if (indiceAtual >= 12) { finalizarQuiz(); return; }
             const p = perguntasSelecionadas[indiceAtual];
-            document.getElementById('nivel-display').innerText = `PERGUNTA ${indiceAtual + 1}/12`;
+            document.getElementById('nivel-display').innerText = `PERGUNTA ${indiceAtual + 1}/12 - NÍVEL ${p.n}`;
             document.getElementById('pergunta-texto').innerText = p.t;
             
             const div = document.getElementById('opcoes-container');
