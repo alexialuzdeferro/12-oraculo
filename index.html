@@ -71,7 +71,7 @@
             position: relative;
         }
 
-        /* --- NAVEGAÇÃO (AGORA COM 9 BOTÕES) --- */
+        /* --- NAVEGAÇÃO (AGORA COM 10 BOTÕES) --- */
         .nav-grid {
             display: flex;
             flex-wrap: wrap;
@@ -114,6 +114,18 @@
             background: var(--cor-lilas);
             color: black;
             font-weight: 900;
+        }
+
+        /* Botão HUB (Novo botão com estilo especial) */
+        .btn-hub {
+            border-color: #00ff00;
+            color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        .btn-hub:hover {
+            background: #00ff00;
+            color: black;
+            box-shadow: 0 0 15px #00ff00;
         }
 
         /* Botão PORTAL (Pulsante Dourado) */
@@ -162,7 +174,7 @@
             text-shadow: 2px 2px 4px #000;
         }
 
-        /* --- CONTADOR GLASSMORPHISM --- */
+        /* --- CONTADOR SUPABASE (Glassmorphism e Discreto) --- */
         #counter {
             position: fixed;
             bottom: 12px;
@@ -182,9 +194,36 @@
             display: flex;
             align-items: center;
         }
-        .dot { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: rgba(74, 222, 128, 0.4); margin-left: 6px; }
-        .dot.online { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        
+        #counter:hover {
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        #count {
+            color: #fff;
+            font-weight: 500;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        
+        .dot { 
+            display: inline-block; 
+            width: 4px; 
+            height: 4px; 
+            border-radius: 50%; 
+            background: rgba(74, 222, 128, 0.4); 
+            margin-left: 6px; 
+        }
+        
+        .dot.online { 
+            animation: pulse 2s infinite; 
+        }
+        
+        @keyframes pulse { 
+            0%, 100% { opacity: 0.4; } 
+            50% { opacity: 1; } 
+        }
 
         /* --- QUIZ --- */
         .pergunta-nivel { font-size: 0.8rem; color: var(--cor-lilas); margin-bottom: 10px; }
@@ -221,6 +260,7 @@
 
     <div id="chuva-container"></div>
 
+    <!-- Contador Supabase discreto -->
     <div id="counter" title="Total de visitas">
         <span style="opacity: 0.7;">👤</span>
         <span id="count">0</span>
@@ -229,6 +269,9 @@
 
     <div id="app-container">
         <nav class="nav-grid">
+            <!-- BOTÃO NOVO ADICIONADO AQUI -->
+            <a href="https://alexialuzdeferro.github.io/Hub-Pombagiras/" target="_blank" class="nav-btn btn-hub">HUB</a>
+            
             <button class="nav-btn active" onclick="location.reload()">ORÁCULO</button>
             
             <a href="https://alexialuzdeferro.github.io/grimorio-das-pombagiras/" target="_blank" class="nav-btn">GRIMÓRIO</a>
@@ -476,7 +519,7 @@
             }
         }
 
-        /* --- CONTADOR SUPABASE (Mantido) --- */
+        /* --- CONTADOR SUPABASE (Integrado do segundo código) --- */
         const SUPABASE_URL = 'https://qgnprifuachmfxoaalax.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbnByaWZ1YWNobWZ4b2FhbGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzODU5MDcsImV4cCI6MjA4MDk2MTkwN30.sKSYFhcI-zflr9RUKXpWF0_5sc6foDG7yxdEirtE0W4';
         const SITE_NAME = 'site_alexialuzdeferro';
@@ -484,46 +527,94 @@
         async function initCounter() {
             try {
                 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // Verificar se já contamos nesta sessão
                 if (!sessionStorage.getItem('site_visited')) {
+                    // Incrementar contador único
                     await incrementUniqueCounter(supabase);
                     sessionStorage.setItem('site_visited', 'true');
                     document.getElementById('status-dot').classList.add('online');
                 } else {
+                    // Apenas mostrar o valor atual
                     await showCurrentCount(supabase);
                     document.getElementById('status-dot').classList.add('online');
                 }
-            } catch (e) { useOfflineCounter(); }
+                
+            } catch (error) {
+                // Modo offline silencioso
+                useOfflineCounter();
+            }
         }
-
+        
         async function incrementUniqueCounter(supabase) {
-            const { data: existing } = await supabase.from('page_views').select('view_count').eq('page_name', SITE_NAME).single();
-            const current = existing?.view_count || 0;
-            const newCount = current + 1;
-            await supabase.from('page_views').upsert({ page_name: SITE_NAME, view_count: newCount, last_updated: new Date().toISOString() }, { onConflict: 'page_name' });
-            atualizarDisplay(newCount);
+            try {
+                // Método UPSERT (cria ou atualiza)
+                const { data: existing } = await supabase
+                    .from('page_views')
+                    .select('view_count')
+                    .eq('page_name', SITE_NAME)
+                    .single();
+                
+                const current = existing?.view_count || 0;
+                const newCount = current + 1;
+                
+                await supabase
+                    .from('page_views')
+                    .upsert({
+                        page_name: SITE_NAME,
+                        view_count: newCount,
+                        last_updated: new Date().toISOString()
+                    }, {
+                        onConflict: 'page_name'
+                    });
+                
+                // Animar o número
+                atualizarDisplay(newCount);
+                console.log('✅ Contador atualizado:', newCount);
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                throw error;
+            }
         }
-
+        
         async function showCurrentCount(supabase) {
-            const { data } = await supabase.from('page_views').select('view_count').eq('page_name', SITE_NAME).single();
-            if (data) atualizarDisplay(data.view_count);
+            try {
+                const { data } = await supabase
+                    .from('page_views')
+                    .select('view_count')
+                    .eq('page_name', SITE_NAME)
+                    .single();
+                
+                if (data) {
+                    atualizarDisplay(data.view_count);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar:', error);
+            }
         }
-
+        
         function atualizarDisplay(num) {
             const el = document.getElementById('count');
             el.textContent = num;
             el.style.transform = 'scale(1.3)';
             setTimeout(() => el.style.transform = 'scale(1)', 200);
         }
-
+        
         function useOfflineCounter() {
             let local = localStorage.getItem('local_site_views') || 0;
             local = parseInt(local) + 1;
             localStorage.setItem('local_site_views', local);
+            
             document.getElementById('count').textContent = local;
-            document.getElementById('status-dot').style.background = '#fbbf24';
+            document.getElementById('count').style.opacity = '0.7';
+            document.getElementById('status-dot').style.background = 'rgba(251, 191, 36, 0.5)';
         }
 
-        window.onload = () => { criarChuva(); initCounter(); };
+        window.onload = () => { 
+            criarChuva(); 
+            initCounter(); 
+        };
     </script>
 </body>
 </html>
