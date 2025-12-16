@@ -71,7 +71,7 @@
             position: relative;
         }
 
-        /* --- NAVEGAÇÃO (AGORA COM 10 BOTÕES) --- */
+        /* --- NAVEGAÇÃO --- */
         .nav-grid {
             display: flex;
             flex-wrap: wrap;
@@ -116,7 +116,7 @@
             font-weight: 900;
         }
 
-        /* Botão HUB (Novo botão com estilo especial) */
+        /* Botão HUB */
         .btn-hub {
             border-color: #00ff00;
             color: #00ff00;
@@ -126,6 +126,26 @@
             background: #00ff00;
             color: black;
             box-shadow: 0 0 15px #00ff00;
+        }
+
+        /* --- NOVO BOTÃO: REDES SOCIAIS (DESTAQUE) --- */
+        .btn-social {
+            background: linear-gradient(90deg, #ff0080, #ff8c00); /* Degradê Rosa/Laranja */
+            color: white;
+            border: none;
+            font-weight: 900;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            animation: brilho-social 2s infinite alternate;
+        }
+        .btn-social:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+            box-shadow: 0 0 20px #ff0080;
+            color: white;
+        }
+        @keyframes brilho-social {
+            0% { box-shadow: 0 0 5px #ff0080; }
+            100% { box-shadow: 0 0 15px #ff8c00; }
         }
 
         /* Botão PORTAL (Pulsante Dourado) */
@@ -260,7 +280,6 @@
 
     <div id="chuva-container"></div>
 
-    <!-- Contador Supabase discreto -->
     <div id="counter" title="Total de visitas">
         <span style="opacity: 0.7;">👤</span>
         <span id="count">0</span>
@@ -269,7 +288,8 @@
 
     <div id="app-container">
         <nav class="nav-grid">
-            <!-- BOTÃO NOVO ADICIONADO AQUI -->
+            <a href="https://alexialuzdeferro.github.io/redes_sociais/" target="_blank" class="nav-btn btn-social">REDES SOCIAIS</a>
+
             <a href="https://alexialuzdeferro.github.io/Hub-Pombagiras/" target="_blank" class="nav-btn btn-hub">HUB</a>
             
             <button class="nav-btn active" onclick="location.reload()">ORÁCULO</button>
