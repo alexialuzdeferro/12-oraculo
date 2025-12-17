@@ -238,15 +238,15 @@
 
 <nav class="nav-grid">
     <a href="https://alexialuzdeferro.github.io/redes_sociais/  " target="_blank" class="nav-btn btn-social">REDES SOCIAIS</a>
-    <a href="https://alexialuzdeferro.github.io/Hub-Pombagiras/  " target="_blank" class="nav-btn btn-hub">HUB</a>
-    <button class="nav-btn active" onclick="location.reload()">ORÁCULO</button>
-    <a href="https://alexialuzdeferro.github.io/grimorio-das-pombagiras/  " target="_blank" class="nav-btn">GRIMÓRIO</a>
-    <a href="https://alexialuzdeferro.github.io/PONTOS-CANTADOS/  " target="_blank" class="nav-btn">PONTOS</a>
-    <a href="https://alexialuzdeferro.github.io/dark-melancholy/  " target="_blank" class="nav-btn">🌑 DARK</a>
-    <a href="https://alexialuzdeferro.github.io/Pombagiras/  " target="_blank" class="nav-btn">BLOG</a>
-    <a href="https://linktr.ee/alexiarosadefogo  " target="_blank" class="nav-btn">BIO</a>
-    <a href="https://pombagiras.my.canva.site/  " target="_blank" class="nav-btn">CANVAS</a>
-    <a href="https://bio.site/AlmasdePombagira  " target="_blank" class="nav-btn btn-portal">PORTAL</a>
+    <a href="https://alexialuzdeferro.github.io/Hub-Pombagiras/  " target="_blank" class="nav-btn btn-hub">Hub</a>
+    <button class="nav-btn active" onclick="reiniciarApp()">Oráculo</button>
+    <a href="https://alexialuzdeferro.github.io/grimorio-das-pombagiras/  " target="_blank" class="nav-btn">Grimório</a>
+    <a href="https://alexialuzdeferro.github.io/PONTOS-CANTADOS/  " target="_blank" class="nav-btn">Pontos</a>
+    <a href="https://alexialuzdeferro.github.io/dark-melancholy/  " target="_blank" class="nav-btn">🌑 Dark</a>
+    <a href="https://alexialuzdeferro.github.io/Pombagiras/  " target="_blank" class="nav-btn">Blog</a>
+    <a href="https://linktr.ee/alexiarosadefogo  " target="_blank" class="nav-btn">Bio</a>
+    <a href="https://pombagiras.my.canva.site/  " target="_blank" class="nav-btn">Canvas</a>
+    <a href="https://bio.site/AlmasdePombagira  " target="_blank" class="nav-btn btn-portal">Portal</a>
     <a href="https://alexialuzdeferro.github.io/Business-Card/  " target="_blank" class="nav-btn btn-panico" title="Emergência / Business Card">🔥</a>
 </nav>
 
@@ -272,15 +272,13 @@
         <hr style="border-color:var(--cor-roxo);opacity:0.5;">
         <h3>Sua Guardiã Regente:</h3>
         <div id="oraculo-destino"></div>
-        <button class="quiz-btn" onclick="location.reload()" style="margin-top:30px;">Consultar Novamente</button>
+        <button class="quiz-btn" onclick="reiniciarApp()" style="margin-top:30px;">Consultar Novamente</button>
     </div>
 </div>
 
 </div>
 
 <script>
-/* =================== SCRIPT ORIGINAL (SEM CONTADOR) =================== */
-
 const pombagirasDB = [
     { nome:"Maria Padilha", titulo:"A Rainha", dominio:"Comando", msg:"Maria Padilha é a rainha que governa com sabedoria e força. Ela ensina a liderar com justiça e a enfrentar desafios com coragem." },
     { nome:"Maria Mulambo", titulo:"A Curadora", dominio:"Cura", msg:"Maria Mulambo é a mãe que acolhe e cura. Ela ensina que a humildade é o caminho para a verdadeira transformação." },
@@ -297,82 +295,21 @@ const pombagirasDB = [
 ];
 
 const perguntasBase = [
-    {
-        t: "Qual Pombagira é conhecida como a 'Rainha das Pombagiras', associada ao poder, liderança e justiça, e costuma usar coroa e cetro?",
-        r: "Maria Padilha",
-        o: ["Maria Mulambo", "Maria Padilha", "Maria Quitéria", "Rosa Caveira"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira tem o nome que significa 'trapo' ou 'farrapo' e atua na cura espiritual, humildade e renovação?",
-        r: "Maria Mulambo",
-        o: ["Maria Farrapo", "Maria Mulambo", "Pombagira Menina", "Dama da Noite"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira é considerada a guerreira das Pombagiras, associada à coragem, proteção e batalhas espirituais, inspirada em heroínas da Independência do Brasil?",
-        r: "Maria Quitéria",
-        o: ["Maria Quitéria", "Maria Navalha", "Sete Saias", "Pombagira Cigana"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira está ligada à justiça divina, ao ciclo da vida e da morte, e usa símbolos como caveira e rosas vermelhas?",
-        r: "Rosa Caveira",
-        o: ["Maria Padilha", "Rosa Caveira", "Maria Mulambo", "Pombagira da Praia"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira é a guardiã dos segredos, da intuição e do oculto, frequentemente associada à lua e velas roxas?",
-        r: "Dama da Noite",
-        o: ["Dama da Noite", "Pombagira da Figueira", "Maria Farrapo", "Sete Saias"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira representa a alegria, a dança e a intensidade da vida, simbolizada por sete saias coloridas?",
-        r: "Sete Saias",
-        o: ["Pombagira Cigana", "Maria Navalha", "Sete Saias", "Pombagira Menina"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira está ligada à liberdade, prosperidade e abertura de caminhos, carregando lenço na cabeça e baralho cigano?",
-        r: "Pombagira Cigana",
-        o: ["Pombagira Cigana", "Maria Quitéria", "Dama da Noite", "Maria Padilha"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira é protetora das ruas, da malandragem e da sobrevivência, simbolizada pela navalha e oferendas como cachaça e cigarros?",
-        r: "Maria Navalha",
-        o: ["Maria Farrapo", "Maria Navalha", "Pombagira da Praia", "Maria Mulambo"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira está associada às emoções, à limpeza espiritual e ao poder purificador do mar, usando conchas e velas azuis em seus trabalhos?",
-        r: "Pombagira da Praia",
-        o: ["Pombagira da Praia", "Pombagira da Figueira", "Rosa Caveira", "Pombagira Menina"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira atua na fronteira entre sanidade e caos mental, ajudando a transformar a confusão em clareza e usando farrapos como símbolo?",
-        r: "Maria Farrapo",
-        o: ["Maria Mulambo", "Maria Farrapo", "Maria Padilha", "Sete Saias"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira representa a renovação, a inocência e o recomeço, frequentemente associada a bonecas, flores brancas e velas cor-de-rosa?",
-        r: "Pombagira Menina",
-        o: ["Pombagira Menina", "Pombagira Cigana", "Dama da Noite", "Maria Quitéria"],
-        n: 1
-    },
-    {
-        t: "Qual Pombagira é a guardiã da ancestralidade e da terra, conectando aos antepassados por meio da figueira e oferendas como sementes e folhas?",
-        r: "Pombagira da Figueira",
-        o: ["Pombagira da Figueira", "Pombagira da Praia", "Maria Navalha", "Rosa Caveira"],
-        n: 1
-    }
+    { t: "Qual Pombagira é conhecida como a 'Rainha das Pombagiras', associada ao poder, liderança e justiça, e costuma usar coroa e cetro?", r: "Maria Padilha", o: ["Maria Mulambo", "Maria Padilha", "Maria Quitéria", "Rosa Caveira"] },
+    { t: "Qual Pombagira tem o nome que significa 'trapo' ou 'farrapo' e atua na cura espiritual, humildade e renovação?", r: "Maria Mulambo", o: ["Maria Farrapo", "Maria Mulambo", "Pombagira Menina", "Dama da Noite"] },
+    { t: "Qual Pombagira é considerada a guerreira das Pombagiras, associada à coragem, proteção e batalhas espirituais, inspirada em heroínas da Independência do Brasil?", r: "Maria Quitéria", o: ["Maria Quitéria", "Maria Navalha", "Sete Saias", "Pombagira Cigana"] },
+    { t: "Qual Pombagira está ligada à justiça divina, ao ciclo da vida e da morte, e usa símbolos como caveira e rosas vermelhas?", r: "Rosa Caveira", o: ["Maria Padilha", "Rosa Caveira", "Maria Mulambo", "Pombagira da Praia"] },
+    { t: "Qual Pombagira é a guardiã dos segredos, da intuição e do oculto, frequentemente associada à lua e velas roxas?", r: "Dama da Noite", o: ["Dama da Noite", "Pombagira da Figueira", "Maria Farrapo", "Sete Saias"] },
+    { t: "Qual Pombagira representa a alegria, a dança e a intensidade da vida, simbolizada por sete saias coloridas?", r: "Sete Saias", o: ["Pombagira Cigana", "Maria Navalha", "Sete Saias", "Pombagira Menina"] },
+    { t: "Qual Pombagira está ligada à liberdade, prosperidade e abertura de caminhos, carregando lenço na cabeça e baralho cigano?", r: "Pombagira Cigana", o: ["Pombagira Cigana", "Maria Quitéria", "Dama da Noite", "Maria Padilha"] },
+    { t: "Qual Pombagira é protetora das ruas, da malandragem e da sobrevivência, simbolizada pela navalha e oferendas como cachaça e cigarros?", r: "Maria Navalha", o: ["Maria Farrapo", "Maria Navalha", "Pombagira da Praia", "Maria Mulambo"] },
+    { t: "Qual Pombagira está associada às emoções, à limpeza espiritual e ao poder purificador do mar, usando conchas e velas azuis em seus trabalhos?", r: "Pombagira da Praia", o: ["Pombagira da Praia", "Pombagira da Figueira", "Rosa Caveira", "Pombagira Menina"] },
+    { t: "Qual Pombagira atua na fronteira entre sanidade e caos mental, ajudando a transformar a confusão em clareza e usando farrapos como símbolo?", r: "Maria Farrapo", o: ["Maria Mulambo", "Maria Farrapo", "Maria Padilha", "Sete Saias"] },
+    { t: "Qual Pombagira representa a renovação, a inocência e o recomeço, frequentemente associada a bonecas, flores brancas e velas cor-de-rosa?", r: "Pombagira Menina", o: ["Pombagira Menina", "Pombagira Cigana", "Dama da Noite", "Maria Quitéria"] },
+    { t: "Qual Pombagira é a guardiã da ancestralidade e da terra, conectando aos antepassados por meio da figueira e oferendas como sementes e folhas?", r: "Pombagira da Figueira", o: ["Pombagira da Figueira", "Pombagira da Praia", "Maria Navalha", "Rosa Caveira"] }
 ];
 
 let perguntasSelecionadas = [], indiceAtual = 0, acertos = 0;
-
 const emojis = ['🍷','🔱','🌹','💃','🔥','🕯️','🚬','🌙','💀','🗡️'];
 
 function criarChuva(){
@@ -386,6 +323,15 @@ function criarChuva(){
         c.appendChild(e);
         setTimeout(()=>e.remove(), 5000);
     }, 300);
+}
+
+function reiniciarApp() {
+    indiceAtual = 0;
+    acertos = 0;
+    perguntasSelecionadas = [];
+    document.getElementById('tela-inicio').classList.remove('hidden');
+    document.getElementById('tela-quiz').classList.add('hidden');
+    document.getElementById('tela-resultado').classList.add('hidden');
 }
 
 function iniciarQuiz(){
@@ -426,12 +372,10 @@ function verificarResposta(btn, esc, cor){
         acertos++;
     } else {
         btn.classList.add('btn-incorreto');
-        // Destaca a correta
         const corretaBtn = Array.from(botoes).find(b => b.innerText === cor);
         if(corretaBtn) corretaBtn.classList.add('btn-correto');
     }
 
-    // Avança após 1.5s
     setTimeout(() => {
         indiceAtual++;
         mostrarPergunta();
