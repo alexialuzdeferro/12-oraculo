@@ -227,6 +227,55 @@
             padding: 10px;
             border-left: 3px solid var(--cor-vermelho);
         }
+
+        /* --- CONTADOR DISCRETO --- */
+        .visitor-counter {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(224, 176, 255, 0.2);
+            border-radius: 25px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 100;
+            opacity: 0.5;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .visitor-counter:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .counter-icon {
+            font-size: 0.85rem;
+            color: var(--cor-vermelho);
+            animation: pulse-counter 2s infinite;
+        }
+
+        @keyframes pulse-counter {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .counter-number {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--texto-destaque);
+            font-weight: bold;
+        }
+
+        .counter-label {
+            font-size: 0.6rem;
+            color: var(--cor-lilas);
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 
@@ -237,17 +286,17 @@
 <div id="app-container">
 
 <nav class="nav-grid">
-    <a href="https://alexialuzdeferro.github.io/redes_sociais/  " target="_blank" class="nav-btn btn-social">REDES SOCIAIS</a>
-    <a href="https://alexialuzdeferro.github.io/Hub-Pombagiras/  " target="_blank" class="nav-btn btn-hub">Hub</a>
+    <a href="https://alexialuzdeferro.github.io/redes_sociais/" target="_blank" class="nav-btn btn-social">REDES SOCIAIS</a>
+    <a href="https://alexialuzdeferro.github.io/Hub-Pombagiras/" target="_blank" class="nav-btn btn-hub">Hub</a>
     <button class="nav-btn active" onclick="reiniciarApp()">Oráculo</button>
-    <a href="https://alexialuzdeferro.github.io/grimorio-das-pombagiras/  " target="_blank" class="nav-btn">Grimório</a>
-    <a href="https://alexialuzdeferro.github.io/PONTOS-CANTADOS/  " target="_blank" class="nav-btn">Pontos</a>
-    <a href="https://alexialuzdeferro.github.io/dark-melancholy/  " target="_blank" class="nav-btn">🌑 Dark</a>
-    <a href="https://alexialuzdeferro.github.io/Pombagiras/  " target="_blank" class="nav-btn">Blog</a>
-    <a href="https://linktr.ee/alexiarosadefogo  " target="_blank" class="nav-btn">Bio</a>
-    <a href="https://pombagiras.my.canva.site/  " target="_blank" class="nav-btn">Canvas</a>
-    <a href="https://bio.site/AlmasdePombagira  " target="_blank" class="nav-btn btn-portal">Portal</a>
-    <a href="https://alexialuzdeferro.github.io/Business-Card/  " target="_blank" class="nav-btn btn-panico" title="Emergência / Business Card">🔥</a>
+    <a href="https://alexialuzdeferro.github.io/grimorio-das-pombagiras/" target="_blank" class="nav-btn">Grimório</a>
+    <a href="https://alexialuzdeferro.github.io/PONTOS-CANTADOS/" target="_blank" class="nav-btn">Pontos</a>
+    <a href="https://alexialuzdeferro.github.io/dark-melancholy/" target="_blank" class="nav-btn">🌑 Dark</a>
+    <a href="https://alexialuzdeferro.github.io/Pombagiras/" target="_blank" class="nav-btn">Blog</a>
+    <a href="https://linktr.ee/alexiarosadefogo" target="_blank" class="nav-btn">Bio</a>
+    <a href="https://pombagiras.my.canva.site/" target="_blank" class="nav-btn">Canvas</a>
+    <a href="https://bio.site/AlmasdePombagira" target="_blank" class="nav-btn btn-portal">Portal</a>
+    <a href="https://alexialuzdeferro.github.io/Business-Card/" target="_blank" class="nav-btn btn-panico" title="Emergência / Business Card">🔥</a>
 </nav>
 
 <div id="aba-oraculo">
@@ -278,7 +327,123 @@
 
 </div>
 
+<!-- CONTADOR DISCRETO -->
+<div class="visitor-counter" id="visitorCounter">
+    <span class="counter-icon">🔮</span>
+    <span class="counter-number" id="visitorCount">...</span>
+    <span class="counter-label">visitas</span>
+</div>
+
 <script>
+// ========== CONFIGURAÇÃO SUPABASE ==========
+const CONFIG = {
+    SUPABASE_URL: 'https://rbygxkbewzknvjjhxdvw.supabase.co',
+    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJieWd4a2Jld3prbnZqamh4ZHZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMDcxNjQsImV4cCI6MjA4MTU4MzE2NH0.YrHF9HEGo6yv9MyNsPzFgBhaAB1DRh2SLU8f7L6s1nY',
+    PAGE_NAME: 'oraculo-12-pombagiras1',
+    SESSION_KEY: 'oraculo_visited_2024'
+};
+
+// ========== CONTADOR DE VISITAS ==========
+async function initializeCounter() {
+    const viewCountElement = document.getElementById('visitorCount');
+    
+    try {
+        const hasViewed = sessionStorage.getItem(CONFIG.SESSION_KEY);
+        let finalCount = 0;
+
+        if (!hasViewed) {
+            // Chamar a função RPC para incrementar
+            const rpcResponse = await fetch(
+                `${CONFIG.SUPABASE_URL}/rest/v1/rpc/increment_page_view`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': CONFIG.SUPABASE_KEY,
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        target_page: CONFIG.PAGE_NAME
+                    })
+                }
+            );
+
+            if (rpcResponse.ok) {
+                const result = await rpcResponse.json();
+                finalCount = result;
+                sessionStorage.setItem(CONFIG.SESSION_KEY, 'true');
+                console.log('✅ Visita contabilizada! Total:', finalCount);
+            } else {
+                finalCount = await getCurrentCount();
+            }
+        } else {
+            finalCount = await getCurrentCount();
+        }
+
+        if (finalCount > 0) {
+            animateCounter(viewCountElement, finalCount);
+        } else {
+            viewCountElement.textContent = '1';
+        }
+
+    } catch (error) {
+        console.log('Counter error:', error);
+        viewCountElement.textContent = '∞';
+    }
+}
+
+async function getCurrentCount() {
+    try {
+        const response = await fetch(
+            `${CONFIG.SUPABASE_URL}/rest/v1/page_views?page=eq.${encodeURIComponent(CONFIG.PAGE_NAME)}&select=view_count`,
+            {
+                method: 'GET',
+                headers: {
+                    'apikey': CONFIG.SUPABASE_KEY,
+                    'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`
+                }
+            }
+        );
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+                return data[0].view_count || 0;
+            }
+        }
+    } catch (e) {
+        console.log('Get count error:', e);
+    }
+    return 0;
+}
+
+function animateCounter(element, targetNumber) {
+    const duration = 1200;
+    const steps = 30;
+    const stepValue = targetNumber / steps;
+    let current = 0;
+    
+    const interval = setInterval(() => {
+        current += stepValue;
+        if (current >= targetNumber) {
+            element.textContent = formatNumber(targetNumber);
+            clearInterval(interval);
+        } else {
+            element.textContent = formatNumber(Math.floor(current));
+        }
+    }, duration / steps);
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString('pt-BR');
+}
+
+// ========== QUIZ / ORÁCULO ==========
 const pombagirasDB = [
     { nome:"Maria Padilha", titulo:"A Rainha", dominio:"Comando", msg:"Maria Padilha é a rainha que governa com sabedoria e força. Ela ensina a liderar com justiça e a enfrentar desafios com coragem." },
     { nome:"Maria Mulambo", titulo:"A Curadora", dominio:"Cura", msg:"Maria Mulambo é a mãe que acolhe e cura. Ela ensina que a humildade é o caminho para a verdadeira transformação." },
@@ -352,6 +517,11 @@ function mostrarPergunta(){
     const p = perguntasSelecionadas[indiceAtual];
     document.getElementById('pergunta-texto').innerText = p.t;
     document.getElementById('nivel-display').innerText = `NÍVEL ${indiceAtual + 1}`;
+    
+    // Atualizar barra de progresso
+    const progresso = ((indiceAtual) / perguntasSelecionadas.length) * 100;
+    document.getElementById('barra-progresso').style.width = progresso + '%';
+    
     const d = document.getElementById('opcoes-container');
     d.innerHTML = '';
     p.o.forEach(op => {
@@ -397,7 +567,11 @@ function finalizarQuiz(){
     `;
 }
 
-window.onload = criarChuva;
+// ========== INICIALIZAÇÃO ==========
+window.onload = function() {
+    criarChuva();
+    setTimeout(initializeCounter, 500);
+};
 </script>
 
 </body>
